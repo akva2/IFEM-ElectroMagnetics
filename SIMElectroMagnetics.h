@@ -17,8 +17,8 @@
 #include "IFEM.h"
 #include "AnaSol.h"
 #include "DataExporter.h"
+#include "ElectroMagneticProperties.h"
 #include "Functions.h"
-#include "Maxwell.h"
 #include "SIMenums.h"
 #include "SIMsolution.h"
 #include "TimeStep.h"
@@ -31,19 +31,13 @@
   \brief Driver class for isogeometric FE analysis of electromagnetics problems.
 */
 
-template<class Dim> class SIMElectroMagnetics : public Dim, public SIMsolution
+template<class Dim, class Integrand>
+class SIMElectroMagnetics : public Dim, public SIMsolution
 {
 public:
-  //! \brief Default constructor.
-  SIMElectroMagnetics(TimeIntegration::Method method) :
-    Dim(2*Dim::dimension), em(Dim::dimension, method)
-  {
-    Dim::myProblem = &em;
-  }
-
   //! \brief Mixed constructor.
-  SIMElectroMagnetics(TimeIntegration::Method method, bool m) :
-    Dim({Dim::dimension, Dim::dimension}), em(Dim::dimension, method)
+  SIMElectroMagnetics(TimeIntegration::Method method) :
+    Dim(std::vector<unsigned char>(Dim::dimension, 1)), em(Dim::dimension, method)
   {
     Dim::myProblem = &em;
   }
@@ -276,7 +270,7 @@ public:
   }
 
 private:
-  Maxwell em; //!< Maxwells integrand
+  Integrand em; //!< Problem integrand
   std::vector<std::unique_ptr<ElectroMagneticProperties>> mVec; //!< Material properties
 };
 

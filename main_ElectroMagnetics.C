@@ -13,10 +13,11 @@
 
 #include "IFEM.h"
 #include "ASMmxBase.h"
-#include "SIM1D.h"
 #include "SIM2D.h"
 #include "SIM3D.h"
 #include "SIMElectroMagnetics.h"
+#include "CurlEquation.h"
+#include "Maxwell.h"
 #include "SIMSolver.h"
 #include "SIMargsBase.h"
 #include "Profiler.h"
@@ -96,21 +97,20 @@ template<class Sim> int runSimulatorStat(char* infile, Sim& sim)
   \param infile The input file to parse
 */
 
-template<class Dim> int runSimulator(char* infile, TimeIntegration::Method method)
+template<class Dim> int runSimulator(char* infile,
+                                     bool curlEq,
+                                     TimeIntegration::Method method)
 {
-  if (ASMmxBase::Type != ASMmxBase::NONE) {
-    SIMElectroMagnetics<Dim> em(method, true);
-    if (method == TimeIntegration::NONE)
-      return runSimulatorStat(infile, em);
-    else
-      return runSimulatorTrans(infile, em);
-  } else {
-    SIMElectroMagnetics<Dim> em(method);
-    if (method == TimeIntegration::NONE)
-      return runSimulatorStat(infile, em);
-    else
-      return runSimulatorTrans(infile, em);
+  if (curlEq) {
+    SIMElectroMagnetics<Dim,CurlEquation> em(method);
+    return runSimulatorStat(infile, em);
   }
+
+  SIMElectroMagnetics<Dim,Maxwell> em(method);
+  if (method == TimeIntegration::NONE)
+    return runSimulatorStat(infile, em);
+  else
+    return runSimulatorTrans(infile, em);
 }
 
 
@@ -145,10 +145,11 @@ int main (int argc, char** argv)
   utl::profiler->start("Initialization");
 
   TimeIntegration::Method timeMethod = TimeIntegration::NONE;
-  ASMmxBase::Type = ASMmxBase::NONE;
+  ASMmxBase::Type = ASMmxBase::CURL_COMPATIBLE;
 
   char* infile = nullptr;
   SIMargsBase args("electromagnetics");
+  bool curl = true;
 
   IFEM::Init(argc,argv,"Electro-Magnetics solver");
   for (int i = 1; i < argc; i++)
@@ -160,8 +161,6 @@ int main (int argc, char** argv)
       timeMethod = TimeIntegration::BE;
     else if (!strcmp(argv[i],"-bdf2"))
       timeMethod = TimeIntegration::BDF2;
-    else if (!strcmp(argv[i],"-mixed"))
-      ASMmxBase::Type = ASMmxBase::REDUCED_CONT_RAISE_BASIS1;
     else if (!infile) {
       infile = argv[i];
       if (!args.readXML(infile,false))
@@ -189,9 +188,7 @@ int main (int argc, char** argv)
   utl::profiler->stop("Initialization");
 
   if (args.dim == 3)
-    return runSimulator<SIM3D>(infile,timeMethod);
-  else if (args.dim == 2)
-    return runSimulator<SIM2D>(infile,timeMethod);
+    return runSimulator<SIM3D>(infile,curl,timeMethod);
   else
-    return runSimulator<SIM1D>(infile,timeMethod);
+    return runSimulator<SIM2D>(infile,curl,timeMethod);
 }

@@ -120,8 +120,8 @@ bool Maxwell::evalInt (LocalIntegral& elmInt,
     for (size_t k = 0; k < nsd; ++k)
       H[k] += mu*bdf[t]/time.dt * elmInt.vec[2*t+1].dot(fe.basis(2), k, nsd);
 
-  WeakOps::Curl(elMat.A[3], fe, -1.0, 2, 1);
-  WeakOps::Curl(elMat.A[4], fe, 1.0, 1, 2);
+//  WeakOps::Curl(elMat.A[3], fe, -1.0, 2, 1);
+ // WeakOps::Curl(elMat.A[4], fe, 1.0, 1, 2);
 
   double fac = sigma;
   if (bdf.getOrder() > 0) {

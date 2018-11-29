@@ -13,7 +13,8 @@ if(NOT IFEM_CONFIGURED)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${IFEM_CXX_FLAGS}")
 endif()
 
-set(EM_SRCS ElectroMagneticProperties.C
+set(EM_SRCS CurlEquation.C
+            ElectroMagneticProperties.C
             Maxwell.C)
 
 include_directories(${IFEM_INCLUDES} ${PROJECT_SOURCE_DIR} ../Common)
